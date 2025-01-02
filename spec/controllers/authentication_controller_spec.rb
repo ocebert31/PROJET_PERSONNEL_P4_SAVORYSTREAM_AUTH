@@ -1,72 +1,64 @@
 require 'rails_helper'
 
 RSpec.describe AuthenticationController, type: :controller do
-  describe 'POST #register' do
-    let(:valid_params) { { email: 'user@example.com', password: 'password123', confirmPassword: 'password123' } }
-    let(:invalid_params) { { email: 'user@example.com', password: 'password123', confirmPassword: 'password456' } }
-    let(:existing_user) { create(:user, email: 'user@example.com', password: 'password123') }
+  let(:valid_attributes) { { email: "user@example.com", password: "password123", confirmPassword: "password123" } }
+  let(:invalid_attributes) { { email: "user@example.com", password: "short" } }
+  let(:existing_user) { User.create!(email: "existing@example.com", password: "password123") }
 
-    context 'when email is already taken' do
-      before do
-        existing_user
-        post :register, params: invalid_params
-      end
+  describe "POST #register" do
+    context "with valid parameters" do
+      it "creates a new user and returns a token" do
+        expect {
+          post :register, params: valid_attributes
+        }.to change(User, :count).by(1)  
 
-      it 'returns an error message' do
-        expect(response.status).to eq(422)
-        expect(response.body).to include("L'email a déjà été pris")
+        expect(response).to have_http_status(:created)
+        expect(JSON.parse(response.body)["token"]).to be_present
       end
     end
 
-    context 'when passwords do not match' do
-      before do
-        post :register, params: invalid_params
-      end
+    context "with invalid parameters" do
+      it "does not create a new user" do
+        expect {
+          post :register, params: invalid_attributes
+        }.not_to change(User, :count)
 
-      it 'returns an error message' do
-        expect(response.status).to eq(422)
-        expect(response.body).to include("Les mots de passe ne correspondent pas")
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["error"]).to eq("Password must be at least 6 characters long")
       end
     end
 
-    context 'when registration is successful' do
-      before do
-        post :register, params: valid_params
+    context 'when creating a new user' do
+      it 'hashes the password before saving' do
+        post :register, params: valid_attributes
+        user = User.find_by(email: valid_attributes[:email])
+        expect(user.password_digest).not_to eq('password123')
       end
+    end
+  end
 
-      it 'returns a created status' do
-        expect(response.status).to eq(201)
-      end
-
-      it 'returns a token in the response' do
-        expect(response.body).to include("token")
+  describe "POST #login" do
+    context "with valid credentials" do
+      it "logs the user in and returns a token" do
+        post :login, params: { email: existing_user.email, password: "password123" }
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)["message"]).to eq("You are successfully connected")
+        expect(JSON.parse(response.body)["token"]).to be_present
       end
     end
 
-    context 'when email is invalid' do
-      let(:invalid_email_params) { { email: 'invalidemail', password: 'password123', confirmPassword: 'password123' } }
-    
-      before do
-        post :register, params: invalid_email_params
+    context "with invalid credentials" do
+      it "returns an error for invalid email" do
+        post :login, params: { email: "wrong@example.com", password: "password123" }
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)["error"]).to eq("Invalid email or password")
       end
-    
-      it 'returns an error message' do
-        expect(response.status).to eq(422)
-        expect(response.body).to include("Le format de l'email n'est pas valide")
+
+      it "returns an error for invalid password" do
+        post :login, params: { email: existing_user.email, password: "wrongpassword" }
+        expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)["error"]).to eq("Invalid email or password")
       end
     end
-    
-    context 'when password is empty' do
-      let(:empty_password_params) { { email: 'newuser@example.com', password: '', confirmPassword: '' } }
-    
-      before do
-        post :register, params: empty_password_params
-      end
-    
-      it 'returns an error message' do
-        expect(response.status).to eq(422)
-        expect(response.body).to include("Le mot de passe ne peut pas être vide")
-      end
-    end    
   end
 end

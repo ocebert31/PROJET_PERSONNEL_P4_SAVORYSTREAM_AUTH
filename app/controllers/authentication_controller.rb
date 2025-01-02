@@ -1,50 +1,45 @@
 class AuthenticationController < ApplicationController
+  before_action :validate_email_and_password, only: [:register, :login]
+  before_action :validation_for_register, only: [:register]
+
   def register
-    if email_already_taken?
-      return render_error("L'email a déjà été pris", :unprocessable_entity)
-    end
-
-    if valid_email_format?(params[:email])
-      return render_error("Le format de l'email n'est pas valide", :unprocessable_entity)
-    end
-
-    if passwords_do_not_match?
-      return render_error("Les mots de passe ne correspondent pas", :unprocessable_entity)
-    end
-
-    if password_empty?
-      return render_error("Le mot de passe ne peut pas être vide", :unprocessable_entity)
-    end
-
     user = build_user
-
     if user.save
       render json: { token: encode_token(user_id: user.id) }, status: :created
     else
-      render_error(user.errors.full_messages, :unprocessable_entity)
+      render_error("Error creating your account", :unprocessable_entity)
+    end
+  end
+
+  def login
+    user = User.find_by(email: params[:email])
+    if user&.authenticate(params[:password])
+      render json: { message: "You are successfully connected", token: encode_token(user_id: user.id) }, status: :ok
+    else
+      render_error("Invalid email or password", :unauthorized)
     end
   end
 
   private
 
-  def user_params
-    params.permit(:email, :password)
+  def validate_email_and_password
+    validator = AuthenticationValidator.new(params)
+    error = validator.validate_common_fields
+    return render_error(error[:message], error[:status]) if error
   end
 
-  def email_already_taken?
-    User.exists?(email: params[:email])
-  end
-
-  def passwords_do_not_match?
-    params[:password] != params[:confirmPassword]
-  end
-
-  def password_empty?
-    params[:password].blank?
+  def validation_for_register 
+    validator = AuthenticationValidator.new(params)
+    error = validator.validate_register_fields
+    return render_error(error[:message], error[:status]) if error
   end
 
   def build_user
     User.new(user_params)
+  end
+
+  def user_params
+    params.permit(:email, :password)
   end
 
   def encode_token(payload)
@@ -55,8 +50,4 @@ class AuthenticationController < ApplicationController
   def render_error(message, status)
     render json: { error: message }, status: status
   end
-
-  def valid_email_format?(email)
-    !(email =~ /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-  end  
 end
