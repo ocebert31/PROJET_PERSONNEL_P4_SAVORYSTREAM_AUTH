@@ -6,6 +6,11 @@ class User < ApplicationRecord
 
     validate :password_no_spaces
 
+    def encode_token(payload)
+      secret = ENV['SECRET_KEY_BASE'] || Rails.application.secret_key_base
+      JWT.encode(payload, secret)
+    end
+
     private
   
     def password_no_spaces

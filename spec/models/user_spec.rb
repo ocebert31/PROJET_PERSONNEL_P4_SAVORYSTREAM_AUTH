@@ -98,5 +98,12 @@ RSpec.describe User, type: :model do
         end
       end
     end
+
+    context 'when creating a new user' do
+      it "hashes the password before saving" do
+        user = valid_user
+        expect(user.password_digest).not_to eq("password123")
+      end
+    end
   end
 end
