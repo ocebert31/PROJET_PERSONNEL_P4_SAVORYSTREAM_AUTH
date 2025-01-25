@@ -70,3 +70,6 @@ group :test do
   gem 'factory_bot_rails'
   gem 'faker'
 end
+
+# gem "dotenv-rails", "~> 3.1"
+gem 'dotenv-rails', groups: [:development, :test]
