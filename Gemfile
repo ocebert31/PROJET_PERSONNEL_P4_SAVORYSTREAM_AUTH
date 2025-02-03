@@ -73,3 +73,7 @@ end
 
 # gem "dotenv-rails", "~> 3.1"
 gem 'dotenv-rails', groups: [:development, :test]
+
+
+gem 'omniauth'
+gem 'omniauth-google-oauth2'

@@ -11,4 +11,7 @@ Rails.application.routes.draw do
 
   resources :users, only: [:create, :destroy]
   resources :sessions, only: [:create, :destroy]
+
+  get '/auth/google_oauth2/callback', to: 'sessions#google_oauth2'
+  get '/auth/failure', to: 'sessions#failure'
 end

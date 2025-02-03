@@ -10,10 +10,11 @@ class UsersController < ApplicationController
     private
 
     def build_user
-        User.new(user_params)
+        User.new(create_user_params)
     end
-    
-    def user_params
-        params.permit(:email, :password)
-    end
+
+    def create_user_params
+        params.permit(:email, :password, :password_confirmation)
+      end
+      
 end
