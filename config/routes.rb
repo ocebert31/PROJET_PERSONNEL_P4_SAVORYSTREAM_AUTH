@@ -14,4 +14,6 @@ Rails.application.routes.draw do
 
   get '/auth/google_oauth2/callback', to: 'sessions#google_oauth2'
   get '/auth/failure', to: 'sessions#failure'
+
+  get 'tokens/decode', to: 'tokens#decode'
 end
