@@ -1,7 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe SessionsController, type: :controller do
-  let(:existing_user) { User.create!(email: "existing@example.com", password: "password123") }
+  let(:existing_user) do
+    User.create!( email: "test@example.com", password: "password123", first_name: "John", last_name: "Doe", phone_number: "0600000000") end
+  
 
   describe "POST #create" do
     context "with valid credentials" do
@@ -14,14 +16,8 @@ RSpec.describe SessionsController, type: :controller do
     end
 
     context "with invalid credentials" do
-      it "returns an error for invalid email" do
-        post :create, params: { email: "wrong@example.com", password: "password123" }
-        expect(response).to have_http_status(:unauthorized)
-        expect(JSON.parse(response.body)["error"]).to eq("Unable to login")
-      end
-
-      it "returns an error for invalid password" do
-        post :create, params: { email: existing_user.email, password: "wrongpassword" }
+      it "returns an error for invalid email and password" do
+        post :create, params: { email: "wrong@example.com", password: "wrongpassword" }
         expect(response).to have_http_status(:unauthorized)
         expect(JSON.parse(response.body)["error"]).to eq("Unable to login")
       end

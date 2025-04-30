@@ -1,12 +1,26 @@
 class SessionsController < ApplicationController
   def create
-    user = User.find_by(email: params[:email])
+    identify = params[:email] || params[:phone_number]
+    user = find_user_by_email_or_phone(identify)
     if user&.authenticate(params[:password])
-      token = user.encode_token({ user_id: user.id })
-      render json: { message: "You are successfully connected", token: token }, status: :ok
+      render json: success_response(user), status: :ok
     else
       render json: { error: "Unable to login" }, status: :unauthorized
     end
+  end
+
+  private
+  
+  def find_user_by_email_or_phone(identify)
+    User.find_by(email: identify) || User.find_by(phone_number: identify)
+  end
+
+  def success_response(user)
+    {
+      message: "You are successfully connected",
+      token: user.encode_token({ user_id: user.id }),
+      user: user.slice(:id, :email, :phone_number, :first_name, :last_name, :role)
+    }
   end
 
   def google_oauth2
