@@ -10,17 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_11_121459) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_19_090732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
 
-  create_table "user", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "first_name", limit: 50, null: false
     t.string "last_name", limit: 50, null: false
-    t.string "email", limit: 50, null: false
+    t.string "email", limit: 50
     t.string "password_digest", limit: 100, null: false
-    t.string "phone_number", limit: 10, null: false
+    t.string "phone_number", limit: 10
     t.string "role", limit: 10, default: "customer", null: false
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "updated_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
