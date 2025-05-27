@@ -23,6 +23,11 @@ RSpec.describe User, type: :model do
         user.email = nil
         expect(user).to be_valid
       end
+
+      it 'is valid when phone number is blank but email is provided' do
+        user.phone_number = nil
+        expect(user).to be_valid
+      end
     end
 
     describe 'Email validations' do
